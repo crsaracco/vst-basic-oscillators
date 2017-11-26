@@ -1,0 +1,11 @@
+[package]
+name = "vst-basic-oscillators"
+version = "0.1.0"
+authors = ["Charles Saracco <crsaracco@gmail.com>"]
+
+[dependencies]
+vst2 = { git = "https://github.com/rust-dsp/rust-vst" }
+
+[lib]
+name = "sine_oscillator"
+crate-type = ["dylib"]
