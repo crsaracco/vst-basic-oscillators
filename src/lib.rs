@@ -82,7 +82,7 @@ impl Plugin for SineSynth {
             category: Category::Synth,
             inputs: 2,
             outputs: 2,
-            parameters: 1,
+            parameters: 0,
             initial_delay: 0,
             ..Info::default()
         }
@@ -116,9 +116,7 @@ impl Plugin for SineSynth {
                     let frequency = midi_pitch_to_freq(current_note);
                     let signal = (t * frequency * TAU).sin();
 
-                    let mut current_amplitude = 1.0;
-
-                    *output_sample = (signal * current_amplitude) as f32;
+                    *output_sample = signal as f32;
 
                     self.note_duration += 1.0;
                 } else {
@@ -135,37 +133,6 @@ impl Plugin for SineSynth {
         match can_do {
             CanDo::ReceiveMidiEvent => Supported::Yes,
             _ => Supported::Maybe
-        }
-    }
-
-    fn get_parameter(&self, index: i32) -> f32 {
-        match index {
-            _ => 0.0,
-        }
-    }
-
-    fn set_parameter(&mut self, index: i32, value: f32) {
-        match index {
-            _ => (),
-        }
-    }
-
-    fn get_parameter_name(&self, index: i32) -> String {
-        match index {
-            _ => "".to_string(),
-        }
-    }
-
-    fn get_parameter_text(&self, index: i32) -> String {
-        match index {
-            // Convert to a percentage
-            _ => "".to_string(),
-        }
-    }
-
-    fn get_parameter_label(&self, index: i32) -> String {
-        match index {
-            _ => "".to_string(),
         }
     }
 }
