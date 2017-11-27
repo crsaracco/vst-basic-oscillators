@@ -1,11 +1,12 @@
 #[macro_use] extern crate vst2;
 
+mod sine_oscillator;
+
+use sine_oscillator::SineOscillator;
 use vst2::buffer::AudioBuffer;
 use vst2::plugin::{Category, Plugin, Info, CanDo};
 use vst2::event::Event;
 use vst2::api::{Supported, Events};
-
-use std::f64::consts::PI;
 
 /// Convert the midi note's pitch into the equivalent frequency.
 ///
@@ -18,17 +19,13 @@ fn midi_pitch_to_freq(pitch: u8) -> f64 {
 }
 
 struct SineSynth {
+    sine_oscillator: SineOscillator,
     sample_rate: f64,
-    time: f64,
     note_duration: f64,
     note: Option<u8>,
 }
 
 impl SineSynth {
-    fn time_per_sample(&self) -> f64 {
-        1.0 / self.sample_rate
-    }
-
     /// Process an incoming midi event.
     ///
     /// The midi data is split up like so:
@@ -49,25 +46,23 @@ impl SineSynth {
 
     fn note_on(&mut self, note: u8) {
         self.note_duration = 0.0;
-        self.note = Some(note)
+        self.note = Some(note);
+        self.sine_oscillator.change_frequency(midi_pitch_to_freq(note));
     }
 
     fn note_off(&mut self, note: u8) {
         if self.note == Some(note) {
-            self.note = None
+            self.note = None;
         }
     }
 }
 
-pub const TAU: f64 = PI * 2.0;
-pub const ATTACK_DECAY: f64 = 1024.0 * 4.0;
-
 impl Default for SineSynth {
     fn default() -> SineSynth {
         SineSynth {
+            sine_oscillator: SineOscillator::new(),
             sample_rate: 44100.0,
             note_duration: 0.0,
-            time: 0.0,
             note: None,
         }
     }
@@ -78,7 +73,7 @@ impl Plugin for SineSynth {
         Info {
             name: "sine-oscillator".to_string(),
             vendor: "crsaracco".to_string(),
-            unique_id: 6667,
+            unique_id: 1147000001, // Make sure this is a unique number across all of your VSTs!
             category: Category::Synth,
             inputs: 2,
             outputs: 2,
@@ -104,29 +99,35 @@ impl Plugin for SineSynth {
     }
 
     fn process(&mut self, buffer: &mut AudioBuffer<f32>) {
-        let samples = buffer.samples();
+        let output_channels = buffer.output_count();
+        let num_samples = buffer.samples();
+        let (_, output_buffer) = buffer.split();
 
-        let per_sample = self.time_per_sample();
-
-        for (input_buffer, output_buffer) in buffer.zip() {
-            let mut t = self.time;
-
-            for (_, output_sample) in input_buffer.iter().zip(output_buffer) {
-                if let Some(current_note) = self.note {
-                    let frequency = midi_pitch_to_freq(current_note);
-                    let signal = (t * frequency * TAU).sin();
-
-                    *output_sample = signal as f32;
-
-                    self.note_duration += 1.0;
-                } else {
-                    *output_sample = 0.0;
-                }
-                t += per_sample;
+        // Precompute the samples that should go to each channel.
+        // Our oscillator will output the same signal to all channels.
+        let mut samples: Vec<f64> = Vec::new();
+        if let Some(_) = self.note {
+            for _ in 0..(num_samples) {
+                samples.push(self.sine_oscillator.next_sample(self.sample_rate));
+            }
+        }
+        else {
+            for _ in 0..(num_samples) {
+                // NOTE: You want to use some sort of envelope for real music use, otherwise you
+                // will get clicks at the start and end of playback.
+                samples.push(0.0);
             }
         }
 
-        self.time += samples as f64 * per_sample;
+        // Write the output to each channel.
+        for channel in 0..output_channels {
+            let output_channel = output_buffer.get_mut(channel);
+            let mut sample_counter = 0;
+            for output_sample in output_channel {
+                *output_sample = samples[sample_counter] as f32;
+                sample_counter += 1;
+            }
+        }
     }
 
     fn can_do(&self, can_do: CanDo) -> Supported {
