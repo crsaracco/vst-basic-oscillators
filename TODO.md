@@ -1,10 +1,5 @@
 # TODO
 
-### Organization
-
- - Figure out a way to organize these five different oscillators
- - Split up the actual oscillators from the VST drivers of the oscillators
-
 ### Basic waveform oscillators
 
 Create a simple monophonic oscillator for each of these waveforms:
