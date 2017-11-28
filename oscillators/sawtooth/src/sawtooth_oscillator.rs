@@ -1,0 +1,27 @@
+use std::f64;
+
+pub struct SawtoothOscillator {
+    frequency: f64,
+    phase: f64,
+}
+
+impl SawtoothOscillator {
+    /// Creates a new Sine wave signal generator using user-input f64s.
+    pub fn new() -> SawtoothOscillator {
+        SawtoothOscillator {
+            frequency: 0.0,
+            phase: 0.0,
+        }
+    }
+
+    pub fn change_frequency(&mut self, frequency: f64) {
+        self.frequency = frequency;
+    }
+
+    pub fn next_sample(&mut self, sample_rate: f64) -> f64 {
+        let output = (2.0 * f64::consts::PI * (self.phase)).sin();
+        self.phase = (self.phase + self.frequency / sample_rate).fract();
+
+        output
+    }
+}

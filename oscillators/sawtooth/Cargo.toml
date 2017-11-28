@@ -1,5 +1,5 @@
 [package]
-name = "sine_oscillator"
+name = "sawtooth_oscillator"
 version = "0.1.0"
 authors = ["Charles Saracco <crsaracco@gmail.com>"]
 
@@ -7,5 +7,5 @@ authors = ["Charles Saracco <crsaracco@gmail.com>"]
 vst2 = { git = "https://github.com/rust-dsp/rust-vst" }
 
 [lib]
-name = "sine_oscillator"
+name = "sawtooth_oscillator"
 crate-type = ["dylib"]
