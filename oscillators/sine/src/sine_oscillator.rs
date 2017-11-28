@@ -6,7 +6,7 @@ pub struct SineOscillator {
 }
 
 impl SineOscillator {
-    /// Creates a new Sine wave signal generator using user-input f64s.
+    /// Creates a new Sine wave signal generator.
     pub fn new() -> SineOscillator {
         SineOscillator {
             frequency: 0.0,
